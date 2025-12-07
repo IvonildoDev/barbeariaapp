@@ -1,16 +1,16 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import {
-    deleteAgendamento,
-    getAllAgendamentos,
-    getAllBarbeiros,
-    getAllClientes,
-    insertAgendamento,
-    insertBarbeiro,
-    updateAgendamentoStatus
+  deleteAgendamento,
+  getAllAgendamentos,
+  getAllBarbeiros,
+  getAllClientes,
+  insertAgendamento,
+  insertBarbeiro,
+  updateAgendamentoStatus
 } from '@/services/database';
 import { FontAwesome } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Cliente {
@@ -252,6 +252,12 @@ export default function AgendamentoScreen() {
     return todosHorarios.filter(hora => !horariosOcupados.includes(hora));
   };
 
+  // Função para filtrar apenas barbeiros cadastrados (com especialidade)
+  const barbeirosCadastrados = barbeiros.filter(barbeiro => 
+    barbeiro.nome && barbeiro.nome.trim() !== '' &&
+    barbeiro.especialidade && barbeiro.especialidade.trim() !== ''
+  );
+
   // Horários disponíveis baseados no barbeiro e data selecionados
   const horariosDisponiveis = getHorariosDisponiveis();
 
@@ -455,7 +461,7 @@ export default function AgendamentoScreen() {
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Selecionar Barbeiro</Text>
             <FlatList
-              data={barbeiros}
+              data={barbeirosCadastrados}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity

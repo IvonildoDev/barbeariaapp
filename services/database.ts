@@ -203,9 +203,18 @@ export const initDatabase = async () => {
         descricao TEXT,
         valor REAL NOT NULL,
         data TEXT NOT NULL,
+        forma_pagamento TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Migração: Adicionar coluna forma_pagamento na tabela caixa se não existir
+    try {
+      await db.execAsync(`ALTER TABLE caixa ADD COLUMN forma_pagamento TEXT;`);
+      console.log('✅ Coluna forma_pagamento adicionada à tabela caixa');
+    } catch (e) {
+      // Coluna já existe
+    }
 
     console.log('✅ Banco de dados inicializado com sucesso!');
   } catch (error) {

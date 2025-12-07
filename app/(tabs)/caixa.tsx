@@ -2,6 +2,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { getAllClientes, getAllProdutos, insertCaixa, insertVenda, updateProduto } from '@/services/database';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -232,6 +233,63 @@ export default function CaixaScreen() {
     } catch (error) {
       console.error('Erro ao compartilhar cupom:', error);
       Alert.alert('Erro', 'Não foi possível compartilhar o cupom');
+    }
+  };
+
+  const imprimirCupom = async () => {
+    if (!ultimaVenda) return;
+    
+    try {
+      const htmlContent = `
+        <html>
+          <head>
+            <style>
+              body { font-family: monospace; padding: 20px; max-width: 300px; margin: 0 auto; }
+              .title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+              .empresa { text-align: center; font-size: 14px; margin-bottom: 10px; }
+              .divisor { border-top: 1px dashed #000; margin: 10px 0; }
+              .info { font-size: 12px; margin: 3px 0; }
+              .section-title { font-size: 12px; font-weight: bold; margin: 10px 0 5px; }
+              .item { font-size: 11px; margin: 5px 0; }
+              .item-nome { font-weight: bold; }
+              .item-detalhe { color: #666; }
+              .total { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin: 10px 0; }
+              .pagamento { font-size: 12px; text-align: center; }
+              .rodape { text-align: center; font-size: 11px; margin-top: 15px; font-style: italic; }
+            </style>
+          </head>
+          <body>
+            <div class="title">CUPOM FISCAL</div>
+            <div class="empresa">Barbearia App</div>
+            <div class="divisor"></div>
+            <div class="info">Cupom Nº: ${ultimaVenda.numeroCupom}</div>
+            <div class="info">Data: ${ultimaVenda.data} - ${ultimaVenda.hora}</div>
+            <div class="info">Cliente: ${ultimaVenda.cliente}</div>
+            <div class="divisor"></div>
+            <div class="section-title">ITENS</div>
+            ${ultimaVenda.itens.map((item: ItemConsumo) => `
+              <div class="item">
+                <div class="item-nome">${item.produto.nome}</div>
+                <div class="item-detalhe">${item.quantidade} x R$ ${item.produto.preco.toFixed(2).replace('.', ',')}</div>
+                <div>R$ ${item.subtotal.toFixed(2).replace('.', ',')}</div>
+              </div>
+            `).join('')}
+            <div class="divisor"></div>
+            <div class="total">
+              <span>TOTAL:</span>
+              <span>R$ ${ultimaVenda.total.toFixed(2).replace('.', ',')}</span>
+            </div>
+            <div class="pagamento">Forma de Pagamento: ${ultimaVenda.formaPagamento}</div>
+            <div class="divisor"></div>
+            <div class="rodape">Obrigado pela preferência!</div>
+          </body>
+        </html>
+      `;
+      
+      await Print.printAsync({ html: htmlContent });
+    } catch (error) {
+      console.error('Erro ao imprimir cupom:', error);
+      Alert.alert('Erro', 'Não foi possível imprimir o cupom');
     }
   };
 
@@ -499,19 +557,24 @@ export default function CaixaScreen() {
               )}
             </View>
 
-            <View style={styles.modalButtons}>
+            <View style={styles.cupomButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: colors.primary }]}
-                onPress={compartilharCupom}
+                style={[styles.cupomIconButton, { backgroundColor: '#4CAF50' }]}
+                onPress={imprimirCupom}
               >
-                <FontAwesome name="share" size={16} color="white" />
-                <Text style={styles.modalButtonText}>Compartilhar</Text>
+                <FontAwesome name="print" size={22} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: colors.secondary }]}
+                style={[styles.cupomIconButton, { backgroundColor: colors.primary }]}
+                onPress={compartilharCupom}
+              >
+                <FontAwesome name="share-alt" size={22} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.cupomIconButton, { backgroundColor: colors.secondary }]}
                 onPress={() => setCupomModalVisible(false)}
               >
-                <Text style={styles.modalButtonText}>Fechar</Text>
+                <FontAwesome name="times" size={22} color="white" />
               </TouchableOpacity>
             </View>
           </View>
@@ -796,5 +859,23 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  cupomButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginTop: 20,
+  },
+  cupomIconButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
   },
 });

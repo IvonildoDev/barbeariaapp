@@ -1,8 +1,8 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { deleteBarbeiro, getAllBarbeiros, insertBarbeiro, updateBarbeiro } from '@/services/database';
-import { FontAwesome } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Barbeiro {
@@ -28,6 +28,8 @@ export default function FuncionariosScreen() {
   const [barbeiros, setBarbeiros] = useState<Barbeiro[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   
   // Campos do formulário
   const [nome, setNome] = useState('');
@@ -124,27 +126,23 @@ export default function FuncionariosScreen() {
   };
 
   const handleDelete = async (id: number) => {
-    Alert.alert(
-      'Confirmar Exclusão',
-      'Tem certeza que deseja excluir este funcionário?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteBarbeiro(id);
-              await carregarBarbeiros();
-              Alert.alert('Sucesso', 'Funcionário excluído com sucesso!');
-            } catch (error) {
-              console.error('Erro ao excluir barbeiro:', error);
-              Alert.alert('Erro', 'Não foi possível excluir o funcionário');
-            }
-          },
-        },
-      ]
-    );
+    setDeleteId(id);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmarDelete = async () => {
+    if (deleteId === null) return;
+    
+    try {
+      await deleteBarbeiro(deleteId);
+      await carregarBarbeiros();
+      setDeleteModalVisible(false);
+      setDeleteId(null);
+      Alert.alert('Sucesso', 'Funcionário excluído com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir barbeiro:', error);
+      Alert.alert('Erro', 'Não foi possível excluir o funcionário');
+    }
   };
 
   const renderBarbeiro = ({ item }: { item: Barbeiro }) => (
@@ -216,6 +214,47 @@ export default function FuncionariosScreen() {
           contentContainerStyle={styles.listContainer}
         />
       )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      <Modal
+        visible={deleteModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={[styles.deleteModalContent, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.deleteIconContainer}>
+              <MaterialIcons name="delete" size={60} color={colors.danger} />
+            </View>
+            
+            <Text style={[styles.deleteTitle, { color: colors.text }]}>
+              Excluir Funcionário?
+            </Text>
+            
+            <Text style={[styles.deleteMessage, { color: colors.secondary }]}>
+              Tem certeza que deseja excluir este funcionário? Esta ação não pode ser desfeita.
+            </Text>
+            
+            <View style={styles.deleteButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.deleteButton, { backgroundColor: colors.secondary }]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.deleteButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.deleteButton, { backgroundColor: colors.danger }]}
+                onPress={confirmarDelete}
+              >
+                <FontAwesome name="trash" size={18} color="white" />
+                <Text style={styles.deleteButtonText}>Excluir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal de Cadastro/Edição */}
       <Modal
@@ -501,5 +540,62 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteModalContent: {
+    width: '80%',
+    padding: 30,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  deleteIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  deleteTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  deleteMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 25,
+    textAlign: 'center',
+  },
+  deleteButtonsContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  deleteButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 10,
+    gap: 8,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

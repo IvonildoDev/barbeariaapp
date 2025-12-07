@@ -2,7 +2,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { deleteCliente, getAllClientes, insertCliente, updateCliente } from '@/services/database';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, FlatList, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Cliente {
@@ -162,24 +162,21 @@ export default function CadastroScreen() {
           style={[styles.actionButton, styles.editButton, { backgroundColor: colors.primary }]}
           onPress={() => handleEdit(item)}
         >
-          <MaterialIcons name="edit" size={18} color="white" />
-          <Text style={styles.actionButtonText}>Editar</Text>
+          <MaterialIcons name="edit" size={20} color="white" />
         </TouchableOpacity>
         
         <TouchableOpacity
           style={[styles.actionButton, styles.whatsappButton, { backgroundColor: '#25D366' }]}
           onPress={() => handleWhatsApp(item.telefone)}
         >
-          <FontAwesome name="whatsapp" size={18} color="white" />
-          <Text style={styles.actionButtonText}>WhatsApp</Text>
+          <FontAwesome name="whatsapp" size={20} color="white" />
         </TouchableOpacity>
         
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton, { backgroundColor: colors.danger }]}
           onPress={() => handleDelete(item.id)}
         >
-          <MaterialIcons name="delete" size={18} color="white" />
-          <Text style={styles.actionButtonText}>Excluir</Text>
+          <MaterialIcons name="delete" size={20} color="white" />
         </TouchableOpacity>
       </View>
     </View>
